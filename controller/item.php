@@ -121,59 +121,53 @@ use model\Categorie;
         * On récupère tous les champs du formulaire en supprimant
         * les caractères invisibles en début et fin de chaîne.
         */
-        $nom = trim($_POST['nom']);
-        $email = trim($_POST['email']);
-        $phone = trim($_POST['phone']);
-        $ville = trim($_POST['ville']);
-        $departement = trim($_POST['departement']);
-        $categorie = trim($_POST['categorie']);
-        $title = trim($_POST['title']);
-        $description = trim($_POST['description']);
-        $price = trim($_POST['price']);
+        $fields = ['nom', 'email', 'phone', 'ville', 'departement', 'categorie', 'title', 'description', 'price'];
+        foreach ($fields as $field) {
+            $$field = trim($_POST[$field]);
+        }
 
 
         // Tableau d'erreurs personnalisées
-        $errors = array();
-        $errors['nameAdvertiser'] = '';
-        $errors['emailAdvertiser'] = '';
-        $errors['phoneAdvertiser'] = '';
-        $errors['villeAdvertiser'] = '';
-        $errors['departmentAdvertiser'] = '';
-        $errors['categorieAdvertiser'] = '';
-        $errors['titleAdvertiser'] = '';
-        $errors['descriptionAdvertiser'] = '';
-        $errors['priceAdvertiser'] = '';
+        $errorMessages = [
+            'nameAdvertiser'        => 'Veuillez entrer votre nom',
+            'emailAdvertiser'       => 'Veuillez entrer une adresse mail correcte',
+            'phoneAdvertiser'       => 'Veuillez entrer votre numéro de téléphone',
+            'villeAdvertiser'       => 'Veuillez entrer votre ville',
+            'departmentAdvertiser'  => 'Veuillez choisir un département',
+            'categorieAdvertiser'   => 'Veuillez choisir une catégorie',
+            'titleAdvertiser'       => 'Veuillez entrer un titre',
+            'descriptionAdvertiser' => 'Veuillez entrer une description',
+            'priceAdvertiser'       => 'Veuillez entrer un prix',
+        ];
 
-
-        // On teste que les champs ne soient pas vides et soient de bons types
-        if(empty($nom)) {
-            $errors['nameAdvertiser'] = 'Veuillez entrer votre nom';
+        if (empty($data['nom'])) {
+            $errors['nameAdvertiser'] = $errorMessages['nameAdvertiser'];
         }
-        if(!isEmail($email)) {
-            $errors['emailAdvertiser'] = 'Veuillez entrer une adresse mail correcte';
+        if (!$this->isEmail($data['email'])) {
+            $errors['emailAdvertiser'] = $errorMessages['emailAdvertiser'];
         }
-        if(empty($phone) && !is_numeric($phone) ) {
-            $errors['phoneAdvertiser'] = 'Veuillez entrer votre numéro de téléphone';
+        if (empty($data['phone']) || !is_numeric($data['phone'])) {
+            $errors['phoneAdvertiser'] = $errorMessages['phoneAdvertiser'];
         }
-        if(empty($ville)) {
-            $errors['villeAdvertiser'] = 'Veuillez entrer votre ville';
+        if (empty($data['ville'])) {
+            $errors['villeAdvertiser'] = $errorMessages['villeAdvertiser'];
         }
-        if(!is_numeric($departement)) {
-            $errors['departmentAdvertiser'] = 'Veuillez choisir un département';
+        if (!is_numeric($data['departement'])) {
+            $errors['departmentAdvertiser'] = $errorMessages['departmentAdvertiser'];
         }
-        if(!is_numeric($categorie)) {
-            $errors['categorieAdvertiser'] = 'Veuillez choisir une catégorie';
+        if (!is_numeric($data['categorie'])) {
+            $errors['categorieAdvertiser'] = $errorMessages['categorieAdvertiser'];
         }
-        if(empty($title)) {
-            $errors['titleAdvertiser'] = 'Veuillez entrer un titre';
+        if (empty($data['title'])) {
+            $errors['titleAdvertiser'] = $errorMessages['titleAdvertiser'];
         }
-        if(empty($description)) {
-            $errors['descriptionAdvertiser'] = 'Veuillez entrer une description';
+        if (empty($data['description'])) {
+            $errors['descriptionAdvertiser'] = $errorMessages['descriptionAdvertiser'];
         }
-        if(empty($price) || !is_numeric($price)) {
-            $errors['priceAdvertiser'] = 'Veuillez entrer un prix';
+        if (empty($data['price']) || !is_numeric($data['price'])) {
+            $errors['priceAdvertiser'] = $errorMessages['priceAdvertiser'];
         }
-
+        
         // On vire les cases vides
         $errors = array_values(array_filter($errors));
 

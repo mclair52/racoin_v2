@@ -28,108 +28,111 @@ class addItem
 
     function addNewItem($twig, $menu, $chemin, $allPostVars)
     {
-
         date_default_timezone_set('Europe/Paris');
 
-        /*
-        * On récupère tous les champs du formulaire en supprimant
-        * les caractères invisibles en début et fin de chaîne.
-        */
-        $nom              = trim($_POST['nom']);
-        $email            = trim($_POST['email']);
-        $phone            = trim($_POST['phone']);
-        $ville            = trim($_POST['ville']);
-        $departement      = trim($_POST['departement']);
-        $categorie        = trim($_POST['categorie']);
-        $title            = trim($_POST['title']);
-        $description      = trim($_POST['description']);
-        $price            = trim($_POST['price']);
-        $password         = trim($_POST['psw']);
-        $password_confirm = trim($_POST['confirm-psw']);
+        // Liste des champs à récupérer
+        $fields = [
+            'nom', 'email', 'phone', 'ville', 'departement', 
+            'categorie', 'title', 'description', 'price', 
+            'psw', 'confirm-psw'
+        ];
+
+        // Récupération et nettoyage des champs
+        $data = [];
+        foreach ($fields as $field) {
+            $data[$field] = isset($_POST[$field]) ? trim($_POST[$field]) : '';
+        }
 
         // Tableau d'erreurs personnalisées
-        $errors                          = array();
-        $errors['nameAdvertiser']        = '';
-        $errors['emailAdvertiser']       = '';
-        $errors['phoneAdvertiser']       = '';
-        $errors['villeAdvertiser']       = '';
-        $errors['departmentAdvertiser']  = '';
-        $errors['categorieAdvertiser']   = '';
-        $errors['titleAdvertiser']       = '';
-        $errors['descriptionAdvertiser'] = '';
-        $errors['priceAdvertiser']       = '';
-        $errors['passwordAdvertiser']    = '';
+        $errorMessages = [
+            'nameAdvertiser'        => 'Veuillez entrer votre nom',
+            'emailAdvertiser'       => 'Veuillez entrer une adresse mail correcte',
+            'phoneAdvertiser'       => 'Veuillez entrer votre numéro de téléphone',
+            'villeAdvertiser'       => 'Veuillez entrer votre ville',
+            'departmentAdvertiser'  => 'Veuillez choisir un département',
+            'categorieAdvertiser'   => 'Veuillez choisir une catégorie',
+            'titleAdvertiser'       => 'Veuillez entrer un titre',
+            'descriptionAdvertiser' => 'Veuillez entrer une description',
+            'priceAdvertiser'       => 'Veuillez entrer un prix',
+            'passwordAdvertiser'    => 'Les mots de passes ne sont pas identiques'
+        ];
 
-        // On teste que les champs ne soient pas vides et soient de bons types
-        if (empty($nom)) {
-            $errors['nameAdvertiser'] = 'Veuillez entrer votre nom';
+        $errors = [];
+
+        // Validation des champs
+        if (empty($data['nom'])) {
+            $errors['nameAdvertiser'] = $errorMessages['nameAdvertiser'];
         }
-        if (!$this->isEmail($email)) {
-            $errors['emailAdvertiser'] = 'Veuillez entrer une adresse mail correcte';
+        if (!$this->isEmail($data['email'])) {
+            $errors['emailAdvertiser'] = $errorMessages['emailAdvertiser'];
         }
-        if (empty($phone) && !is_numeric($phone)) {
-            $errors['phoneAdvertiser'] = 'Veuillez entrer votre numéro de téléphone';
+        if (empty($data['phone']) || !is_numeric($data['phone'])) {
+            $errors['phoneAdvertiser'] = $errorMessages['phoneAdvertiser'];
         }
-        if (empty($ville)) {
-            $errors['villeAdvertiser'] = 'Veuillez entrer votre ville';
+        if (empty($data['ville'])) {
+            $errors['villeAdvertiser'] = $errorMessages['villeAdvertiser'];
         }
-        if (!is_numeric($departement)) {
-            $errors['departmentAdvertiser'] = 'Veuillez choisir un département';
+        if (!is_numeric($data['departement'])) {
+            $errors['departmentAdvertiser'] = $errorMessages['departmentAdvertiser'];
         }
-        if (!is_numeric($categorie)) {
-            $errors['categorieAdvertiser'] = 'Veuillez choisir une catégorie';
+        if (!is_numeric($data['categorie'])) {
+            $errors['categorieAdvertiser'] = $errorMessages['categorieAdvertiser'];
         }
-        if (empty($title)) {
-            $errors['titleAdvertiser'] = 'Veuillez entrer un titre';
+        if (empty($data['title'])) {
+            $errors['titleAdvertiser'] = $errorMessages['titleAdvertiser'];
         }
-        if (empty($description)) {
-            $errors['descriptionAdvertiser'] = 'Veuillez entrer une description';
+        if (empty($data['description'])) {
+            $errors['descriptionAdvertiser'] = $errorMessages['descriptionAdvertiser'];
         }
-        if (empty($price) || !is_numeric($price)) {
-            $errors['priceAdvertiser'] = 'Veuillez entrer un prix';
+        if (empty($data['price']) || !is_numeric($data['price'])) {
+            $errors['priceAdvertiser'] = $errorMessages['priceAdvertiser'];
         }
-        if (empty($password) || empty($password_confirm) || $password != $password_confirm) {
-            $errors['passwordAdvertiser'] = 'Les mots de passes ne sont pas identiques';
+        if (empty($data['psw']) || empty($data['confirm-psw']) || $data['psw'] != $data['confirm-psw']) {
+            $errors['passwordAdvertiser'] = $errorMessages['passwordAdvertiser'];
         }
 
-        // On vire les cases vides
-        $errors = array_values(array_filter($errors));
-
-        // S'il y a des erreurs on redirige vers la page d'erreur
+        // S'il y a des erreurs, on redirige vers la page d'erreur
         if (!empty($errors)) {
-
             $template = $twig->load("add-error.html.twig");
-            echo $template->render(array(
-                    "breadcrumb" => $menu,
-                    "chemin"     => $chemin,
-                    "errors"     => $errors
-                )
-            );
-        } // sinon on ajoute à la base et on redirige vers une page de succès
-        else {
+            echo $template->render([
+                "breadcrumb" => $menu,
+                "chemin"     => $chemin,
+                "errors"     => $errors
+            ]);
+        } else {
+            // Création des objets Annonce et Annonceur
             $annonce   = new Annonce();
             $annonceur = new Annonceur();
 
-            $annonceur->email         = htmlentities($allPostVars['email']);
-            $annonceur->nom_annonceur = htmlentities($allPostVars['nom']);
-            $annonceur->telephone     = htmlentities($allPostVars['phone']);
+            // Remplissage des données
+            foreach (['email', 'nom', 'phone'] as $field) {
+                $annonceur->$field = htmlentities($data[$field]);
+            }
 
-            $annonce->ville          = htmlentities($allPostVars['ville']);
-            $annonce->id_departement = $allPostVars['departement'];
-            $annonce->prix           = htmlentities($allPostVars['price']);
-            $annonce->mdp            = password_hash($allPostVars['psw'], PASSWORD_DEFAULT);
-            $annonce->titre          = htmlentities($allPostVars['title']);
-            $annonce->description    = htmlentities($allPostVars['description']);
-            $annonce->id_categorie   = $allPostVars['categorie'];
-            $annonce->date           = date('Y-m-d');
+            foreach ([
+                'ville', 'departement' => 'id_departement', 
+                'price' => 'prix', 'psw' => 'mdp', 
+                'title' => 'titre', 'description', 
+                'categorie' => 'id_categorie'
+            ] as $key => $field) {
+                $fieldName = is_numeric($key) ? $field : $key;
+                $annonce->$field = $fieldName === 'mdp' 
+                    ? password_hash($data[$fieldName], PASSWORD_DEFAULT) 
+                    : htmlentities($data[$fieldName]);
+            }
 
+            $annonce->date = date('Y-m-d');
 
+            // Sauvegarde dans la base de données
             $annonceur->save();
             $annonceur->annonce()->save($annonce);
 
-
+            // Redirection vers la page de confirmation
             $template = $twig->load("add-confirm.html.twig");
-            echo $template->render(array("breadcrumb" => $menu, "chemin" => $chemin));
+            echo $template->render([
+                "breadcrumb" => $menu,
+                "chemin"     => $chemin
+            ]);
         }
     }
-}
+    }
